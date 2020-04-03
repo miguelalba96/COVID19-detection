@@ -87,3 +87,23 @@ class Checkpoint:
             self.__getattribute__(attr)
 
 
+def write_tensorboard(stats_dict, step, full_eval=False):
+    name = 'Epoch metrics' if full_eval else 'Metrics'
+    type = stats_dict['type']
+    for scope, metric in stats_dict.items():
+        if scope == 'loss':
+            tf.summary.scalar('{}/Loss'.format(name), metric.numpy(), step)
+        if scope == 'accuracy':
+            tf.summary.scalar('{}/Accuracy'.format(name), metric.numpy(), step)
+
+
+def build_graph(model, feats, log_dir, step=0):
+    @tf.function
+    def tracing(feats):
+        pred = model(feats)
+        return pred
+    writer = tf.summary.create_file_writer(os.path.join(log_dir, 'model_graph'))
+    tf.summary.trace_on(graph=True)
+    _ = tracing(feats)
+    with writer.as_default:
+        tf.summary.trace_export(name="graphs", step=step)
