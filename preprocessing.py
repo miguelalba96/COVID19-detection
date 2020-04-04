@@ -1,4 +1,5 @@
 import os
+import argparse
 import pydicom as dicom
 import numpy as np
 import pandas as pd
@@ -7,8 +8,12 @@ from tqdm import tqdm
 
 import utils
 
-imgpath = './covid-chestxray-dataset/images'
-csvpath = './covid-chestxray-dataset/metadata.csv'
+
+parser = argparse.ArgumentParser(description='Preprocessing')
+parser.add_argument('--data-folder', help="Data folder with pneumonia dataset")
+parser.add_argument('--covid-path', default='./covid-chestxray-dataset/', help='covid image path')
+
+args = parser.parse_args()
 
 
 def _int64_feature(value):
@@ -115,7 +120,7 @@ class PrepCovid(object):
         return None
 
     def prepare_covid_xray(self):
-        csv = pd.read_csv(csvpath, nrows=None)
+        csv = pd.read_csv(os.path.join(args.covid_path, 'metadata.csv'), nrows=None)
         idx_pa = csv["view"] == "PA"
         csv = csv[idx_pa]
 
@@ -142,7 +147,7 @@ class PrepCovid(object):
             print('Test patients: ', self.test_dict_persons[key])
             # go through all the patients
             for patient in data_list:
-                fn = os.path.join(imgpath, patient[1])
+                fn = os.path.join(args.covid_path, 'images', patient[1])
                 meta = {
                     'dataset': 'covid-chestxray-dataset',
                     'patient_id': patient,
@@ -234,7 +239,7 @@ class PrepCovid(object):
 
     def prepate_datasets(self):
         """
-        add it every time preparing a dataset
+        add a new function to the class every time preparing a new dataset and call it here
         """
 
         self.prepare_covid_xray()
@@ -245,7 +250,6 @@ class PrepCovid(object):
 
 
 if __name__ == '__main__':
-    dataset_path = '/media/miguel/ALICIUM/Miguel/DATASETS/COVID19'
-    prep = PrepCovid(os.path.join(dataset_path, 'all_images'), dataset_path)
+    prep = PrepCovid(os.path.join(args.data_folder, 'all_images'), args.data_folder)
     prep.prepate_datasets()
     pass
