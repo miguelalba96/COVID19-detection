@@ -8,7 +8,14 @@ from net_tools import DataLoader, Checkpoint, write_tensorboard, build_graph
 
 
 class CNNCovid19(object):
-    def __init__(self, modelname, data_path, hyperparams, **kwargs):
+    def __init__(self, modelname, data_path, model, hyperparams, **kwargs):
+        """
+        :param modelname:
+        :param data_path: data of records
+        :param model: tensorflow model
+        :param hyperparams: params
+        :param kwargs: 
+        """
         self.model_path = os.path.join('/.trained_models', modelname)
         self.data_path = data_path
         self.params = {
@@ -29,7 +36,7 @@ class CNNCovid19(object):
         self.epoch_counter = tf.Variable(initial_value=0, trainable=False, dtype=tf.int64)
         self.step = tf.Variable(initial_value=0, trainable=False, dtype=tf.int64)
 
-        self.model = None
+        self.model = model
         self.train_data = DataLoader(self.data_path, training=True)
         self.test_data = DataLoader(self.data_path, training=False)
 
