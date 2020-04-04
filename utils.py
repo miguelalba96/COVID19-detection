@@ -34,7 +34,7 @@ def save(fn, a):
 
 
 def imread(fn):
-    img = cv2.imread(fn)
+    img = cv2.imread(fn, cv2.IMREAD_GRAYSCALE)
     return img
 
 

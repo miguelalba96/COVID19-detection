@@ -17,8 +17,10 @@ class Conv2D(tf.keras.layers.Layer):
             self.conv = tf.keras.layers.Conv2D(num_filters, kernel_size=kernel_size, strides=strides,
                                                name='conv1', padding=padding, **kwargs)
 
-        self.bn = tf.keras.layers.BatchNormalization(name='bn')
-        self.activ = tf.keras.layers.Activation(activ, name=activ)
+        if batch_norm:
+            self.bn = tf.keras.layers.BatchNormalization(name='bn')
+        if activ:
+            self.activ = tf.keras.layers.Activation(activ, name=activ)
 
     def call(self, x):
         x = self.conv(x)
@@ -30,7 +32,7 @@ class Conv2D(tf.keras.layers.Layer):
 
 
 class Pooling(tf.keras.layers.Layer):
-    def __init__(self, type_pool='max', pool_size=(2, 2), name='pool', strides=1, **kwargs):
+    def __init__(self, type_pool='max', pool_size=(2, 2), name='pool', strides=None, **kwargs):
         super(Pooling, self).__init__(name=name)
         self.type_pool = type_pool
         if type_pool == 'avg':
@@ -46,16 +48,16 @@ class IdentityBlock(tf.keras.layers.Layer):
     def __init__(self, filters, kernel_size=3, name='identity', **kwargs):
         super(IdentityBlock, self).__init__(name=name)
         self.filters = filters
-        self.conv1 = tf.keras.layers.Conv2D(self.filters[0], kernel_size=1, strides=1,
+        self.conv1 = tf.keras.layers.Conv2D(filters[0], kernel_size=1, strides=1,
                                             name='conv1', padding='valid', **kwargs)
         self.bn1 = tf.keras.layers.BatchNormalization(name='bn1')
         self.relu1 = tf.keras.layers.ReLU(name='relu1')
-        self.conv2 = tf.keras.layers.Conv2D(self.filters[1], kernel_size=kernel_size, strides=1,
+        self.conv2 = tf.keras.layers.Conv2D(filters[1], kernel_size=kernel_size, strides=1,
                                             name='conv2', padding='same', **kwargs)
         self.bn2 = tf.keras.layers.BatchNormalization(name='bn2')
         self.relu2 = tf.keras.layers.ReLU(name='relu2')
 
-        self.conv3 = tf.keras.layers.Conv2D(self.filters[2], kernel_size=1, strides=1,
+        self.conv3 = tf.keras.layers.Conv2D(filters[2], kernel_size=1, strides=1,
                                             name='conv3', padding='valid', **kwargs)
         self.bn3 = tf.keras.layers.BatchNormalization(name='bn3')
         self.relu3 = tf.keras.layers.ReLU(name='relu3')

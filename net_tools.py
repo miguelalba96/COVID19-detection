@@ -6,15 +6,15 @@ import tensorflow as tf
 class DataLoader(object):
     def __init__(self, data_path, training):
         self.data_path = data_path
-        self.training = training
+        self.training = 'train' if training else 'test'
         self.classes = ['normal', 'pneumonia', 'COVID-19']
         self.seed = 1
-        if self.training:
+        if self.training == 'train':
             self.batch_size = 128
-            self.buffer = 17000
+            self.buffer = 1000
         else:
             self.batch_size = 64
-            self.batch_size = 220
+            self.buffer = 220
 
     def parse_record(self, record):
         features = {
@@ -104,5 +104,5 @@ def build_graph(model, feats, log_dir, step=0):
     writer = tf.summary.create_file_writer(os.path.join(log_dir, 'model_graph'))
     tf.summary.trace_on(graph=True)
     _ = tracing(feats)
-    with writer.as_default:
+    with writer.as_default():
         tf.summary.trace_export(name="graphs", step=step)

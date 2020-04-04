@@ -64,6 +64,7 @@ class PrepCovid(object):
     def __init__(self, outdir, pneumonia_path, test_persons=None):
         self.outdir = outdir
         self.pneumonia_path = pneumonia_path
+        self.resize = int(args.resize_img)
 
         self.test_dict_persons = {
             'pneumonia': ['8', '31'],
@@ -121,6 +122,7 @@ class PrepCovid(object):
         return None
 
     def prepare_covid_xray(self):
+        print('== Preparing covid19 data')
         csv = pd.read_csv(os.path.join(args.covid_path, 'metadata.csv'), nrows=None)
         idx_pa = csv["view"] == "PA"
         csv = csv[idx_pa]
@@ -149,7 +151,8 @@ class PrepCovid(object):
             # go through all the patients
             for patient in data_list:
                 fn = os.path.join(args.covid_path, 'images', patient[1])
-                img = cv2.resize(utils.imread(fn), (args.resize_img, args.resize_img))
+                img = cv2.resize(utils.imread(fn), (self.resize, self.resize))
+                # print(img.shape)
                 meta = {
                     'dataset': 'covid-chestxray-dataset',
                     'patient_id': patient,
@@ -180,6 +183,7 @@ class PrepCovid(object):
         print('train count: ', self.train_count)
 
     def prepare_pneumonia_data(self):
+        print('== Preparing kaggle data')
         normal_fn = os.path.join(self.pneumonia_path, 'stage_2_detailed_class_info.csv')
         pneu_fn = os.path.join(self.pneumonia_path, 'stage_2_train_labels.csv')
         csv_normal = pd.read_csv(normal_fn, nrows=None)
@@ -209,11 +213,13 @@ class PrepCovid(object):
             for patient in list_fns:
                 fn = os.path.join(self.pneumonia_path, 'stage_2_train_images', patient + '.dcm')
                 ds = dicom.dcmread(fn)
+                img = cv2.resize(ds.pixel_array, (self.resize, self.resize)).astype('float32') / 255.0
+                # print(img.shape)
                 meta = {
                     'dataset': 'neumonia_kaggle_Dataset',
                     'id': patient,
                     'filename': fn,
-                    'image': cv2.resize(ds.pixel_array, (args.resize_img, args.resize_img)).astype('float32') / 255.0,
+                    'image': img,
                     'label': key,
                     'train': 1 if patient[0] not in test_patients else 0
                 }
@@ -225,7 +231,7 @@ class PrepCovid(object):
                     train.append(meta)
                     self.train_count[key] += 1
 
-            print('{} done!'.format(key))
+            print('label {} read and packed!'.format(key))
 
         for lb in labels.keys():
             train_label = [ex for ex in train if ex['label'] == lb]
