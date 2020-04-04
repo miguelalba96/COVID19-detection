@@ -13,7 +13,7 @@ import utils
 parser = argparse.ArgumentParser(description='Preprocessing')
 parser.add_argument('--data-folder', help="Data folder with pneumonia dataset")
 parser.add_argument('--covid-path', default='./covid-chestxray-dataset/', help='covid image path')
-parser.add_argument('--resize-img', default=(256, 256), help='resize images')
+parser.add_argument('--resize-img', default=256, help='resize images')
 
 args = parser.parse_args()
 
@@ -149,7 +149,7 @@ class PrepCovid(object):
             # go through all the patients
             for patient in data_list:
                 fn = os.path.join(args.covid_path, 'images', patient[1])
-                img = cv2.resize(utils.imread(fn), args.resize_img)
+                img = cv2.resize(utils.imread(fn), (args.resize_img, args.resize_img))
                 meta = {
                     'dataset': 'covid-chestxray-dataset',
                     'patient_id': patient,
@@ -213,7 +213,7 @@ class PrepCovid(object):
                     'dataset': 'neumonia_kaggle_Dataset',
                     'id': patient,
                     'filename': fn,
-                    'image': cv2.resize(ds.pixel_array, args.resize_img).astype('float32') / 255.0,
+                    'image': cv2.resize(ds.pixel_array, (args.resize_img, args.resize_img)).astype('float32') / 255.0,
                     'label': key,
                     'train': 1 if patient[0] not in test_patients else 0
                 }
