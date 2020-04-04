@@ -11,6 +11,7 @@ In order to prepare the data clone the repository `git clone https://github.com/
 * Run `preprocessing.py --data-folder .xx/COVID` 
 
 # Models 
+All models train in this repository uses Tensorflow 2.0.1
 * `conv_nets` package contains the models and layers
 (Under construction)
 
