@@ -26,7 +26,6 @@ class DataLoader(object):
         record = tf.io.parse_single_example(record, features)
         img = tf.io.decode_raw(record['image'], tf.float32)
         img = tf.reshape(img, [record['height'], record['width'], 1])
-        img = tf.image.per_image_standardization(img)
         label = tf.one_hot(record['label'], len(self.classes), dtype=tf.float32)
         return img, label
 

@@ -34,10 +34,7 @@ def save(fn, a):
 
 
 def imread(fn):
-    try:
-        img = imageio.imread(fn)
-    except AttributeError:
-        img = cv2.imread(fn)
+    img = cv2.imread(fn)
     return img
 
 

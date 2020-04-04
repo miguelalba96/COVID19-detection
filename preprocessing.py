@@ -1,5 +1,6 @@
 import os
 import argparse
+import cv2
 import pydicom as dicom
 import numpy as np
 import pandas as pd
@@ -12,6 +13,7 @@ import utils
 parser = argparse.ArgumentParser(description='Preprocessing')
 parser.add_argument('--data-folder', help="Data folder with pneumonia dataset")
 parser.add_argument('--covid-path', default='./covid-chestxray-dataset/', help='covid image path')
+parser.add_argument('--resize-img', default=(256, 256), help='resize images')
 
 args = parser.parse_args()
 
@@ -46,8 +48,7 @@ def _process_examples(example_data, filename: str, channels=1):
     with tf.io.TFRecordWriter(filename) as writer:
         for i, ex in enumerate(example_data):
             # define pre augmentation of pre image resizing
-            image = ex['image'].astype(np.float32)
-            image = image.tostring()
+            image = ex['image'].tostring()
             example = tf.train.Example(features=tf.train.Features(feature={
                 'height': _int64_feature(ex['image'].shape[0]),
                 'width': _int64_feature(ex['image'].shape[1]),
@@ -112,7 +113,7 @@ class PrepCovid(object):
                 fn = '{}_{}-{}_{:03d}-{:03d}.tfrecord'.format(_prefix, label, dataname, i + 1, 50)
                 _process_examples(shard, os.path.join(self.outdir, 'train_data', fn))
                 train_check += len(shard)
-            print('Number of samples for {} in training: {}'.format(label, train_check))
+            print('Number of saved samples for {}: {}'.format(label, train_check))
         else:
             fn = '{}_{}-{}_{:03d}-{:03d}.tfrecord'.format(_prefix, label, dataname, 1, 1)
             _process_examples(dataset, os.path.join(self.outdir, 'train_data', fn))
@@ -148,11 +149,12 @@ class PrepCovid(object):
             # go through all the patients
             for patient in data_list:
                 fn = os.path.join(args.covid_path, 'images', patient[1])
+                img = cv2.resize(utils.imread(fn), args.resize_img)
                 meta = {
                     'dataset': 'covid-chestxray-dataset',
                     'patient_id': patient,
                     'filename': fn,
-                    'image': utils.imread(fn),
+                    'image': img.astype('float32') / 255.0,
                     'label': key,
                     'train': 0 if str(patient[0]) in self.test_dict_persons[key] else 1
                 }
@@ -211,7 +213,7 @@ class PrepCovid(object):
                     'dataset': 'neumonia_kaggle_Dataset',
                     'id': patient,
                     'filename': fn,
-                    'image': ds.pixel_array,
+                    'image': cv2.resize(ds.pixel_array, args.resize_img).astype('float32') / 255.0,
                     'label': key,
                     'train': 1 if patient[0] not in test_patients else 0
                 }
@@ -250,6 +252,5 @@ class PrepCovid(object):
 
 
 if __name__ == '__main__':
-    prep = PrepCovid(os.path.join(args.data_folder, 'all_images'), args.data_folder)
+    prep = PrepCovid(os.path.join(args.data_folder), args.data_folder)
     prep.prepate_datasets()
-    pass
