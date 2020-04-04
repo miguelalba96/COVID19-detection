@@ -8,7 +8,7 @@ Principal COVID-19 dataset is taken on the repository https://github.com/ieee802
 The main data preparation and preprocessing is based on the repository [COVID-NET](https://github.com/lindawangg/COVID-Net) including more modularity for new data, and the option to write datasets as tfrecords.
 In order to prepare the data clone the repository `git clone https://github.com/ieee8023/covid-chestxray-dataset` (covid19 image dataset) then download and extract the pnumonia data in a local a folder `xx/COVID`.
 * Every time the covid dataset repository gets updated clone it again for new data and start a new preprocessing.
-* Run `preprocessing.py --data-folder .xx/COVID` 
+* Run `preprocessing.py --data-folder .xx/COVID --resize-img 256`
 
 # Models 
 All models train in this repository uses Tensorflow 2.0.1
