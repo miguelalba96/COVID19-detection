@@ -97,7 +97,7 @@ class PrepCovid(object):
         self.pathologies = ["Pneumonia", "Viral Pneumonia", "Bacterial Pneumonia", "No Finding"] + self.pneumonias
         print('pathologies:{}'.format(sorted(self.pathologies)))
 
-    def shard_dataset(self, dataset, num_records=500):
+    def shard_dataset(self, dataset, num_records=50):
         chunk = len(dataset) // num_records
         parts = [(k * chunk) for k in range(len(dataset)) if (k * chunk) < len(dataset)]
         return chunk, parts
@@ -110,7 +110,7 @@ class PrepCovid(object):
             chunk, parts = self.shard_dataset(dataset)
             for i, j in enumerate(tqdm(parts)):
                 shard = dataset[j:(j + chunk)]
-                fn = '{}_{}-{}_{:03d}-{:03d}.tfrecord'.format(_prefix, label, dataname, i + 1, 50)
+                fn = '{}_{}-{}_{:03d}-{:03d}.tfrecord'.format(_prefix, label, dataname, i + 1, len(parts))
                 _process_examples(shard, os.path.join(self.outdir, 'train_data', fn))
                 train_check += len(shard)
             print('Number of saved samples for {}: {}'.format(label, train_check))
