@@ -53,7 +53,7 @@ def _process_examples(example_data, filename: str, channels=1):
                 'height': _int64_feature(ex['image'].shape[0]),
                 'width': _int64_feature(ex['image'].shape[1]),
                 'depth': _int64_feature(channels),
-                'crop': _bytes_feature(image),
+                'image': _bytes_feature(image),
                 'label': _int64_feature(encode_label(ex['label']))
             }))
             writer.write(example.SerializeToString())
