@@ -9,6 +9,7 @@ The main data preparation and preprocessing is based on the repository [COVID-NE
 In order to prepare the data clone the repository `git clone https://github.com/ieee8023/covid-chestxray-dataset` (covid19 image dataset) then download and extract the pnuemonia data in a local a folder `xx/COVID`.
 * Every time the covid dataset repository gets updated clone it again for new data and start a new preprocessing.
 * Run `preprocessing.py --data-folder .xx/COVID --resize-img xxx`, image size in COVID-NET repo is 224, it is an optional parameter here.
+* Go to `/trained_models/*modelname*` and run tensorboard in order to see the training curves
 
 ## Models 
 All models train in this repository use Tensorflow 2.0.1
