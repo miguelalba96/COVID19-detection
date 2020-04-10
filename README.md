@@ -20,4 +20,4 @@ All models train in this repository use Tensorflow 2.0.1
 
 ## Additionals
 * Adversarial examples crafting addded to the repo, augmentation can be performed crafting modifications of the original images with small pixel changes.
-* Explanable Machine Learning (TO ADD)
+* Explainable Machine Learning (TO ADD)
