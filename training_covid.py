@@ -190,7 +190,7 @@ class CNNCovid19(object):
 def debug():
     modelname = '20200404_covid'
     data_path = '/media/miguel/ALICIUM/Miguel/DATASETS/COVID19/train_data'
-    model = 'COVID_VGGMini'
+    model = 'DebugNET'
     cnn = CNNCovid19(modelname, data_path, model, hyperparams=dict(learning_rate=0.01),
                      kernel_regularizer=tf.keras.regularizers.l2(0.01))
     cnn.train()

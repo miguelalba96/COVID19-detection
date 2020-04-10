@@ -54,10 +54,10 @@ def load(fn):
         return pickle.load(f)
 
 
-def spit_json(fn, data):
+def save_json(fn, data):
     import json
-    with open(fn, 'w') as outfile:
-        json.dump(data, outfile)
+    with open(fn, 'wb') as outfile:
+        outfile.write(json.dumps(data).encode("utf-8"))
 
 
 def get_all_folder(path):

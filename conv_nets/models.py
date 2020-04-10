@@ -3,9 +3,9 @@ import tensorflow as tf
 import conv_nets.layers as layers
 
 
-class COVID_VGGMini(tf.keras.Model):
+class DebugNET(tf.keras.Model):
     def __init__(self, name=None, **kwargs):
-        super(COVID_VGGMini, self).__init__(name=name)
+        super(DebugNET, self).__init__(name=name)
         self.conv1 = layers.Conv2D(16, kernel_size=3, name='conv1', **kwargs)
         self.conv2 = layers.IdentityBlock([16, 16, 16], kernel_size=3, name='conv2', **kwargs)
         self.maxpool1 = layers.Pooling(type_pool='max', name='pool1')
