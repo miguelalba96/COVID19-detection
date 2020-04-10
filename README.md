@@ -16,7 +16,9 @@ All models train in this repository use Tensorflow 2.0.1
 
 ## Training and evaluation
 * The custom CNN training loop accepts subclassed models, functional and sequential constructions.
-* Evaulation computes classification reports for the trained model
+* Evaluation computes classification reports for the trained model
+* In order to evaluate a trained model use `python evaluation.py --model-name 'your model name' --data-path './datapath'
+`.
 
 ## Additionals
 * Adversarial examples crafting addded to the repo, augmentation can be performed crafting modifications of the original images with small pixel changes.
