@@ -79,11 +79,14 @@ class CNNCovid19(object):
         return train_loss, test_loss, train_acc, test_acc
 
     def build_model(self, architecture, input_shape=[128, 128], **params):
-        inputs = tf.keras.Input(shape=tuple(input_shape) + (1,), name='input_img')
         model = getattr(models, str(architecture))(name=self.modelname, **params)
-        model(inputs)
-        print('== Model description ==')
-        print(model.summary())
+        try:
+            print(model.summary())
+        except ValueError:
+            inputs = tf.keras.Input(shape=tuple(input_shape) + (1,), name='input_img')
+            model(inputs)
+            print('== Model description ==')
+            print(model.summary())
         return model
 
     def optimizer(self):
