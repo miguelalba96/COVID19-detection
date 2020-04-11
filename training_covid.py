@@ -190,14 +190,14 @@ class CNNCovid19(object):
         return None
 
 
-def debug():
-    modelname = '20200404_covid'
+def experiment():
+    modelname = '20200411_attentionresnext_3blocks_lr1e-3'
     data_path = '/media/miguel/ALICIUM/Miguel/DATASETS/COVID19/train_data'
-    model = 'DebugNET'
-    cnn = CNNCovid19(modelname, data_path, model, hyperparams=dict(learning_rate=0.01),
-                     kernel_regularizer=tf.keras.regularizers.l2(0.01))
+    model = 'AttentionNet'
+    cnn = CNNCovid19(modelname, data_path, model, hyperparams=dict(learning_rate=0.001))
+                     # kernel_regularizer=tf.keras.regularizers.l2(0.01))
     cnn.train()
 
 
 if __name__ == '__main__':
-    debug()
+    experiment()

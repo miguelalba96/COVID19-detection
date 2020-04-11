@@ -50,8 +50,15 @@ class DataLoader(object):
         sampled_dataset = sampled_dataset.prefetch(2)
         return sampled_dataset
 
-    def test_dataset(self):
-        files = os.path.join(self.data_path, 'test_*.tfrecord')
+    def test_dataset(self, dataset_name=None):
+        """
+        :param dataset_name: take an specific dataset to evaluate
+        :return: all test dataset
+        """
+        if dataset_name:
+            files = os.path.join(self.data_path, 'test_*-{}_*.tfrecord'.format(dataset_name))
+        else:
+            files = os.path.join(self.data_path, 'test_*.tfrecord')
         filenames = glob.glob(files)
         dataset = tf.data.Dataset.list_files(files, shuffle=True, seed=self.seed)
         dataset = dataset.interleave(lambda fn: tf.data.TFRecordDataset(fn), cycle_length=len(filenames),

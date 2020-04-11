@@ -209,6 +209,11 @@ class PrepCovid(object):
 
             # fixed evaluation
             test_patients = np.load(os.path.join(self.pneumonia_path, 'rsna_test_patients_{}.npy'.format(key)))
+            # Counts would be:
+            # test
+            # count: {'normal': 885, 'pneumonia': 1058, 'COVID-19': 10}
+            # train
+            # count: {'normal': 7966, 'pneumonia': 8526, 'COVID-19': 105}
 
             for patient in list_fns:
                 fn = os.path.join(self.pneumonia_path, 'stage_2_train_images', patient + '.dcm')

@@ -18,7 +18,7 @@ import tensorflow.keras.backend as K
 
 
 class Conv2D(tf.keras.layers.Layer):
-    def __init__(self, num_filters, kernel_size=3,  name='conv', strides=1, padding='same', depth_wise=False,
+    def __init__(self, num_filters, kernel_size=3, name='conv', strides=1, padding='same', depth_wise=False,
                  activ='relu', batch_norm=False, **kwargs):
         super(Conv2D, self).__init__(name=name)
         self.depth_wise = depth_wise
@@ -144,7 +144,7 @@ class SqueezeExcitation(tf.keras.layers.Layer):
     def __init__(self, output_dim, ratio=4, name='sq_ex', **kwargs):
         super(SqueezeExcitation, self).__init__(name=name)
         self.gap = tf.keras.layers.GlobalAveragePooling2D(name='gap')
-        self.fc1 = tf.keras.layers.Dense(output_dim//ratio, name='fc1', **kwargs)
+        self.fc1 = tf.keras.layers.Dense(output_dim // ratio, name='fc1', **kwargs)
         self.relu1 = tf.keras.layers.ReLU(name='relu1')
         self.fc2 = tf.keras.layers.Dense(output_dim, name='fc2', **kwargs)
         self.reshape = tf.keras.layers.Reshape((1, 1, output_dim), name='reshape')
@@ -165,7 +165,7 @@ class SqueezeExcitation(tf.keras.layers.Layer):
 class ChannelAttention(tf.keras.layers.Layer):
     def __init__(self, channels, ratio=8, name='channel_att', **kwargs):
         super(ChannelAttention, self).__init__(name=name)
-        self.shared1 = tf.keras.layers.Dense(channels//ratio, activation='relu', kernel_initializer='he_normal',
+        self.shared1 = tf.keras.layers.Dense(channels // ratio, activation='relu', kernel_initializer='he_normal',
                                              use_bias=True, bias_initializer='zeros', **kwargs)
         self.shared2 = tf.keras.layers.Dense(channels, kernel_initializer='he_normal', use_bias=True,
                                              bias_initializer='zeros', **kwargs)
@@ -232,3 +232,95 @@ class CBAM(tf.keras.layers.Layer):
         x = self.channel_attention(inputs)
         x = self.spatial_attention(x)
         return x
+
+
+class GroupConvBlock(tf.keras.layers.Layer):
+    def __init__(self, input_channels, out_channels, channel_groups=1, name='group_conv', strides=1, **kwargs):
+        super(GroupConvBlock, self).__init__(name=name)
+        self.channel_groups = channel_groups
+        self.out_channels = out_channels // channel_groups
+        self.input_channels = input_channels // channel_groups
+        for i in range(channel_groups):
+            setattr(self, "conv%i" % i,
+                    tf.keras.layers.Conv2D(channel_groups, kernel_size=3,  padding='same', use_bias=False,
+                                           strides=strides, kernel_initializer='he_normal', **kwargs))
+
+    def call(self, inputs, **kwargs):
+        feats = []
+        for i in range(self.channel_groups):
+            channels = inputs[:, :, :, i * self.input_channels: (i + 1) * self.input_channels]
+            xi = getattr(self, "conv%i" % i)(channels)
+            feats.append(xi)
+        x = tf.concat(feats, axis=-1)
+        return x
+
+
+class DepthWiseDense(tf.keras.layers.Layer):
+    def __init__(self, nodes_in, nodes_out=2, name='depth_wise',  **kwargs):
+        super(DepthWiseDense, self).__init__(name=name)
+        self.nodes_in = nodes_in
+        self.nodes_out = nodes_out
+        self.split = tf.keras.layers.Lambda(lambda x: tf.split(x, num_or_size_splits=nodes_in, axis=1))
+        for i in range(nodes_in):
+            setattr(self, "dense%i" % i, tf.keras.layers.Dense(nodes_out, kernel_initializer='he_normal',
+                                                               bias_initializer='zeros', **kwargs))
+
+    def call(self, inputs, **kwargs):
+        outputs = []
+        inputs = self.split(inputs)
+        for i in range(self.nodes_in):
+            split_i = inputs[i]
+            xi = getattr(self, "dense%i" % i)(split_i)
+            outputs.append(xi)
+        return tf.concat(outputs, axis=-1)
+
+
+class ResNextBottleNeck(tf.keras.layers.Layer):
+    def __init__(self, filters, strides, groups, name='resnext_bn', attention=False, **kwargs):
+        super(ResNextBottleNeck, self).__init__(name=name)
+        self.conv1 = tf.keras.layers.Conv2D(filters=filters, kernel_size=(1, 1), strides=1,
+                                            name='conv1', padding="same", **kwargs)
+        self.bn1 = tf.keras.layers.BatchNormalization(name='bn1')
+        self.group_conv = GroupConvBlock(input_channels=filters, out_channels=filters, channel_groups=groups,
+                                         name='group_conv', strides=strides, **kwargs)
+        self.bn2 = tf.keras.layers.BatchNormalization(name='bn2')
+        self.conv2 = tf.keras.layers.Conv2D(filters=2 * filters, kernel_size=(1, 1), strides=1,
+                                            name='conv2', padding="same", **kwargs)
+        self.bn3 = tf.keras.layers.BatchNormalization(name='bn3')
+        self.shortcut_conv = tf.keras.layers.Conv2D(filters=2 * filters, kernel_size=(1, 1), strides=strides,
+                                                    name='conv3', padding="same", **kwargs)
+        self.shortcut_bn = tf.keras.layers.BatchNormalization(name='bn4')
+        self.attention = attention
+        if attention:
+            self.attention = CBAM(2 * filters, **kwargs)
+
+    def call(self, inputs, training=None, **kwargs):
+        x = self.conv1(inputs)
+        x = self.bn1(x, training=training)
+        x = tf.nn.relu(x)
+        x = self.group_conv(x)
+        x = self.bn2(x, training=training)
+        x = tf.nn.relu(x)
+        x = self.conv2(x)
+        x = self.bn3(x, training=training)
+        x = tf.nn.relu(x)
+
+        shortcut = self.shortcut_conv(inputs)
+        shortcut = self.shortcut_bn(shortcut, training=training)
+
+        if self.attention:
+            x = self.attention(x)
+
+        output = tf.nn.relu(tf.keras.layers.add([x, shortcut]))
+        return output
+
+
+def build_ResNeXt_block(filters, strides, groups, repeat_num, name='rnext_block', **kwargs):
+    block = tf.keras.Sequential(name=name)
+    block.add(ResNextBottleNeck(filters=filters, strides=strides, groups=groups, name='rnext_block_0', **kwargs))
+    for i in range(1, repeat_num):
+        block.add(ResNextBottleNeck(filters=filters, strides=1, groups=groups, name='rnext_block_{}'.format(i)))
+    return block
+
+
+
