@@ -11,7 +11,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 
 class CNNCovid19(object):
-    def __init__(self, modelname, data_path, architecture, hyperparams, **kwargs):
+    def __init__(self, modelname, data_path, architecture, hyperparams, img_size=224, **kwargs):
         """
         :param modelname:
         :param data_path: data of records
@@ -24,7 +24,7 @@ class CNNCovid19(object):
         self.model_path = os.path.join('./trained_models', modelname)
         self.data_path = data_path
         self.params = {
-            'batch_size': 128,
+            'batch_size': 32,
             'learning_rate': 0.001,
             'schedule': False,
             'optimizer': 'ADAM',
@@ -33,6 +33,7 @@ class CNNCovid19(object):
             'max_class_samples': 8514  # number of pneumonia cases in the data
         }
         self.params.update(hyperparams)
+        self.img_size = img_size
         self.log_dir, self.ckpt_dir, self.train_writer, self.test_writer = self.create_dirs()
 
         self.steps_epoch = np.ceil(2.0 * self.params['max_class_samples'] / self.params['batch_size'])
@@ -78,12 +79,13 @@ class CNNCovid19(object):
         test_acc = tf.keras.metrics.CategoricalAccuracy(name='test_acc')
         return train_loss, test_loss, train_acc, test_acc
 
-    def build_model(self, architecture, input_shape=[128, 128], **params):
+    def build_model(self, architecture, **params):
+        input_shape = [self.img_size, self.img_size, 3]
         model = getattr(models, str(architecture))(name=self.modelname, **params)
         try:
             print(model.summary())
         except ValueError:
-            inputs = tf.keras.Input(shape=tuple(input_shape) + (1,), name='input_img')
+            inputs = tf.keras.Input(shape=tuple(input_shape), name='input_img')
             model(inputs)
             print('== Model description ==')
             print(model.summary())
@@ -92,7 +94,7 @@ class CNNCovid19(object):
     def optimizer(self):
         if self.params['schedule']:
             lr = tf.keras.optimizers.schedules.ExponentialDecay(initial_learning_rate=self.params['learning_rate'],
-                                                                decay_steps=8000, decay_rate=0.5, staircase=True)
+                                                                decay_steps=1000, decay_rate=0.5, staircase=True)
         else:
             lr = self.params['learning_rate']
         if self.params['optimizer'] == 'SGDM':
@@ -117,7 +119,7 @@ class CNNCovid19(object):
         self.opt.apply_gradients(zip(gradients, self.model.trainable_variables))
         _loss = self.train_loss(loss)
         _acc = self.train_acc(labels, predictions)
-        summary = {'type': 'train', 'loss': loss, 'accuracy': _acc}
+        summary = {'type': 'train', 'loss': loss, 'average_loss': _loss,  'accuracy': _acc}
         return summary
 
     @tf.function
@@ -126,7 +128,7 @@ class CNNCovid19(object):
         loss = self.cat_cross_entropy(data, labels, training=False)
         _loss = self.test_loss(loss)
         _acc = self.test_acc(labels, predictions)
-        summary = {'type': 'test', 'loss': loss, 'accuracy': _acc}
+        summary = {'type': 'test', 'loss': loss, 'average_loss': _loss, 'accuracy': _acc}
         return summary
 
     def train(self):
@@ -175,27 +177,28 @@ class CNNCovid19(object):
             with self.test_writer.as_default():
                 write_tensorboard(test_summary, step=self.step, full_eval=True)
 
-            template = 'train loss: {}, test loss: {}, train acc: {}, test acc: {}'
+            template = 'train loss: {}, test loss: {}, train acc: {}, test acc: {} <='
             print(template.format(train_loss, test_summary['loss'], train_acc, test_summary['accuracy']))
 
             self.train_writer.flush()
             self.test_writer.flush()
 
             self.ckpt.save(epoch)
-            # saved in h5 will be implemented in the future
-            # self.model.save(os.path.join(self.model_path, 'epoch_{:05d}.h5'.format(epoch)))
             # TODO: fix serialization with low level API
             self.model.save(os.path.join(self.model_path, 'frozen'))
+            if int(self.step % (self.epochs * self.steps_epoch)) == 0:
+                break
         print('Finished Training')
         return None
 
 
 def experiment():
-    modelname = '20200411_attentionresnext_3blocks_lr1e-3'
+    modelname = '20200411_smallvgg_ADAM1e-3'
     data_path = '/media/miguel/ALICIUM/Miguel/DATASETS/COVID19/train_data'
-    model = 'AttentionNet'
-    cnn = CNNCovid19(modelname, data_path, model, hyperparams=dict(learning_rate=0.001))
-                     # kernel_regularizer=tf.keras.regularizers.l2(0.01))
+    model = 'MiniVGG'
+    cnn = CNNCovid19(modelname, data_path, model, hyperparams=dict(learning_rate=0.0001,
+                                                                   epochs=100, optimizer='ADAM'),
+                     kernel_regularizer=tf.keras.regularizers.l2(0.0001))
     cnn.train()
 
 

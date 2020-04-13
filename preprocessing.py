@@ -9,7 +9,6 @@ from tqdm import tqdm
 
 import utils
 
-
 parser = argparse.ArgumentParser(description='Preprocessing')
 parser.add_argument('--data-folder', help="Data folder with pneumonia dataset")
 parser.add_argument('--covid-path', default='./covid-chestxray-dataset/', help='covid image path')
@@ -35,7 +34,7 @@ def encode_label(label):
         return 2
 
 
-def _process_examples(example_data, filename: str, channels=1):
+def _process_examples(example_data, filename: str, channels=3):
     """
     :param example_data: takes the list of dictionaries and transform them into Tf records, this is an special format
     of tensorflow data that makes your life easier in tf 1.x and 2.0 saving the data and load it in our training loop
@@ -218,7 +217,8 @@ class PrepCovid(object):
             for patient in list_fns:
                 fn = os.path.join(self.pneumonia_path, 'stage_2_train_images', patient + '.dcm')
                 ds = dicom.dcmread(fn)
-                img = cv2.resize(ds.pixel_array, (self.resize, self.resize)).astype('float32') / 255.0
+                img = cv2.cvtColor(ds.pixel_array, cv2.COLOR_GRAY2RGB)
+                img = cv2.resize(img, (self.resize, self.resize)).astype('float32') / 255.0
                 # print(img.shape)
                 meta = {
                     'dataset': 'neumonia_kaggle_Dataset',
@@ -226,7 +226,7 @@ class PrepCovid(object):
                     'filename': fn,
                     'image': img,
                     'label': key,
-                    'train': 1 if patient[0] not in test_patients else 0
+                    'train': 0 if patient[0] in test_patients else 1
                 }
 
                 if patient in test_patients:

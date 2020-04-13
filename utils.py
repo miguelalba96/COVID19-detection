@@ -33,8 +33,11 @@ def save(fn, a):
         pickle.dump(a, f, 2)
 
 
-def imread(fn):
-    img = cv2.imread(fn, cv2.IMREAD_GRAYSCALE)
+def imread(fn, gray_scale=False):
+    if gray_scale:
+        img = cv2.imread(fn, cv2.IMREAD_GRAYSCALE)
+    else:
+        img = cv2.imread(fn)
     return img
 
 

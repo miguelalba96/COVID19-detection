@@ -10,11 +10,11 @@ class DataLoader(object):
         self.classes = ['normal', 'pneumonia', 'COVID-19']
         self.seed = 1
         if self.training == 'train':
-            self.batch_size = 128
+            self.batch_size = 32
             self.buffer = 1000
         else:
-            self.batch_size = 64
-            self.buffer = 220
+            self.batch_size = 16
+            self.buffer = 100
 
     def parse_record(self, record):
         features = {
@@ -25,9 +25,20 @@ class DataLoader(object):
         }
         record = tf.io.parse_single_example(record, features)
         img = tf.io.decode_raw(record['image'], tf.float32)
-        img = tf.reshape(img, [record['height'], record['width'], 1])
+        img = tf.reshape(img, [record['height'], record['width'], 3])
         label = tf.one_hot(record['label'], len(self.classes), dtype=tf.float32)
         return img, label
+
+    def random_jitteing(self, crop):
+        crop = tf.image.resize(crop, [256, 256], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+        crop = tf.image.random_crop(crop, size=[224, 224, 3])
+        return crop
+
+    def agumentation(self, crop, label):
+        # crop = tf.image.random_flip_up_down(crop)
+        crop = self.random_jitteing(crop)
+        crop = tf.image.random_flip_left_right(crop)
+        return crop, label
 
     def load_dataset(self, label):
         files = os.path.join(self.data_path, '{}_{}*.tfrecord'.format(self.training, label))
@@ -36,6 +47,8 @@ class DataLoader(object):
         dataset = dataset.interleave(lambda fn: tf.data.TFRecordDataset(fn), cycle_length=len(filenames),
                                      num_parallel_calls=min(len(filenames), tf.data.experimental.AUTOTUNE))
         dataset = dataset.map(self.parse_record, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        if self.training == 'train':
+            dataset = dataset.map(self.agumentation)
         dataset = dataset.shuffle(self.buffer, seed=self.seed)
         dataset = dataset.repeat()
         return dataset
@@ -99,6 +112,8 @@ def write_tensorboard(stats_dict, step, full_eval=False):
     for scope, metric in stats_dict.items():
         if scope == 'loss':
             tf.summary.scalar('{}/Loss'.format(name), metric.numpy(), step)
+        if scope == 'average_loss':
+            tf.summary.scalar('{}/Average Loss'.format(name), metric.numpy(), step)
         if scope == 'accuracy':
             tf.summary.scalar('{}/Accuracy'.format(name), metric.numpy(), step)
 
