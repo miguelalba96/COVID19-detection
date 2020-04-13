@@ -156,7 +156,7 @@ class PrepCovid(object):
                     'dataset': 'covid-chestxray-dataset',
                     'patient_id': patient,
                     'filename': fn,
-                    'image': img.astype('float32') / 255.0,
+                    'image': utils.standardize_img(img.astype('float32')),
                     'label': key,
                     'train': 0 if str(patient[0]) in self.test_dict_persons[key] else 1
                 }
@@ -218,15 +218,15 @@ class PrepCovid(object):
                 fn = os.path.join(self.pneumonia_path, 'stage_2_train_images', patient + '.dcm')
                 ds = dicom.dcmread(fn)
                 img = cv2.cvtColor(ds.pixel_array, cv2.COLOR_GRAY2RGB)
-                img = cv2.resize(img, (self.resize, self.resize)).astype('float32') / 255.0
-                # print(img.shape)
+                img = utils.standardize_img(cv2.resize(img, (self.resize, self.resize)).astype('float32'))
+
                 meta = {
                     'dataset': 'neumonia_kaggle_Dataset',
                     'id': patient,
                     'filename': fn,
                     'image': img,
                     'label': key,
-                    'train': 0 if patient[0] in test_patients else 1
+                    'train': 0 if patient in test_patients else 1
                 }
 
                 if patient in test_patients:
@@ -237,6 +237,10 @@ class PrepCovid(object):
                     self.train_count[key] += 1
 
             print('label {} read and packed!'.format(key))
+
+        training_patients = [ex['id'] for ex in train]
+        test_patients = [ex['id'] for ex in test]
+        assert len(set(training_patients).intersection(set(test_patients))) == 0
 
         for lb in labels.keys():
             train_label = [ex for ex in train if ex['label'] == lb]
