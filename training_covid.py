@@ -70,6 +70,7 @@ class CNNCovid19(object):
         test_writer = tf.summary.create_file_writer(os.path.join(log_dir, 'opt/test'))
         utils.mdir(log_dir)
         utils.mdir(ckpt_dir)
+        utils.mdir(os.path.join(self.model_path, 'weights'))
         return log_dir, ckpt_dir, train_writer, test_writer
 
     def build_metrics(self):
@@ -185,7 +186,8 @@ class CNNCovid19(object):
 
             self.ckpt.save(epoch)
             # TODO: fix serialization with low level API
-            self.model.save_weights(os.path.join(self.model_path, 'weights'), save_format='tf')
+            self.model.save_weights(os.path.join(self.model_path, 'weights', 'pretrained'),
+                                    overwrite=True, save_format='tf')
             self.model.save(os.path.join(self.model_path, 'frozen'))
             if int(self.step % (self.epochs * self.steps_epoch)) == 0:
                 break
