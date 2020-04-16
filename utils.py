@@ -2,7 +2,7 @@ import gzip
 import pickle
 import os
 import glob
-import imageio
+import numpy as np
 import tensorflow as tf
 from PIL import Image
 import cv2
@@ -50,6 +50,13 @@ def writeimg(fn, img, aspect_ratio=1.0):
     #     img = img.resize((int(h / aspect_ratio), w), Image.BICUBIC)
     # else:
     img.save(fn)
+
+
+def standardize_img(a, axis=(0, 1)):
+    # axis param denotes axes along which mean & std reductions are to be performed
+    mean = np.mean(a, axis=axis, keepdims=True)
+    std = np.sqrt(((a - mean)**2).mean(axis=axis, keepdims=True))
+    return (a - mean) / std
 
 
 def load(fn):
