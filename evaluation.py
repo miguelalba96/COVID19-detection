@@ -38,6 +38,12 @@ class EvalDataset(object):
 
     def compute_metrics(self, predictions):
         results = dict(model_name=self.model_name, report=dict())
+
+        all_labels = [ex['label'] for ex in predictions]
+        all_preds = [ex['pred_class'] for ex in predictions]
+        base_conf_matrix = confusion_matrix(all_labels, all_preds)
+        pprint.pprint({'baseline_conf_matrix': base_conf_matrix.tolist()})
+
         for t in [0.5, 0.6, 0.7, 0.85, 0.9, 0.95]:
             filtered = []
             for ex in predictions:
