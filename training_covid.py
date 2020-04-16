@@ -138,7 +138,7 @@ class CNNCovid19(object):
         data = tf.data.Dataset.zip((train, test))
 
         epoch_bar = tqdm(total=self.epochs, desc='Epoch', position=0)
-        for epoch in range(int(self.epochs)):
+        for epoch in range(int(self.epoch_counter), int(self.epochs)):
             self.epoch_counter.assign_add(1)
             step_bar = tqdm(total=self.steps_epoch, desc='Steps', position=1)
             for train_batch, test_batch in data:
@@ -185,6 +185,7 @@ class CNNCovid19(object):
 
             self.ckpt.save(epoch)
             # TODO: fix serialization with low level API
+            self.model.save_weights(os.path.join(self.model_path, 'weights'), save_format='tf')
             self.model.save(os.path.join(self.model_path, 'frozen'))
             if int(self.step % (self.epochs * self.steps_epoch)) == 0:
                 break
@@ -193,10 +194,10 @@ class CNNCovid19(object):
 
 
 def experiment():
-    modelname = '20200411_smallvgg_ADAM1e-3'
+    modelname = '20200411_AttentionNet_ADAM1e-5'
     data_path = '/media/miguel/ALICIUM/Miguel/DATASETS/COVID19/train_data'
-    model = 'MiniVGG'
-    cnn = CNNCovid19(modelname, data_path, model, hyperparams=dict(learning_rate=0.0001,
+    model = 'AttentionNet'
+    cnn = CNNCovid19(modelname, data_path, model, hyperparams=dict(learning_rate=0.00001,
                                                                    epochs=100, optimizer='ADAM'),
                      kernel_regularizer=tf.keras.regularizers.l2(0.0001))
     cnn.train()
