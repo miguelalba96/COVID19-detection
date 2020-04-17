@@ -4,6 +4,7 @@ detecting covid 19 from images
 |Pneumonia| Covid-19|
 :---------------:|:---------------:
 ![lime_pneumonia](https://github.com/miguelalba96/COVID19-detection/blob/master/images/pneumonia_lime.png) | ![lime_covid](https://github.com/miguelalba96/COVID19-detection/blob/master/images/covid_lime.png)
+
 (*Explanable features*)
 
 ## Datasets
