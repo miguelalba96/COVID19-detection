@@ -1,8 +1,10 @@
 # COVID19-detection
-This is a repository to try new methods detecting covid 19 from images
-![lime_pneumonia](https://github.com/miguelalba96/COVID19-detection/blob/master/images/pneumonia_lime.png)![lime_covid](https://github.com/miguelalba96/COVID19-detection/blob/master/images/covid_lime.png)
-
-(*Explanable features*: 1. Pneumonia , 2. covid-19)
+This is a repository to try new methods
+detecting covid 19 from images
+|Pneumonia| Covid-19|
+:---------------:|:---------------:
+![lime_pneumonia](https://github.com/miguelalba96/COVID19-detection/blob/master/images/pneumonia_lime.png) | ![lime_covid](https://github.com/miguelalba96/COVID19-detection/blob/master/images/covid_lime.png)
+(*Explanable features*)
 
 ## Datasets
 Principal COVID-19 dataset is taken on the repository https://github.com/ieee8023/covid-chestxray-dataset, pnuemonia dataset from https://www.kaggle.com/c/rsna-pneumonia-detection-challenge
