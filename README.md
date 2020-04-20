@@ -8,7 +8,7 @@ detecting covid 19 from images
 (*Explained features*, normalized images)
 
 ## Datasets
-Principal COVID-19 dataset is taken rom the repository https://github.com/ieee8023/covid-chestxray-dataset, pnuemonia dataset from https://www.kaggle.com/c/rsna-pneumonia-detection-challenge
+Principal COVID-19 dataset is taken from the repository https://github.com/ieee8023/covid-chestxray-dataset, pnuemonia dataset from https://www.kaggle.com/c/rsna-pneumonia-detection-challenge
 
 ## Preprocessing
 The main data preparation and preprocessing is based on the repository [COVID-NET](https://github.com/lindawangg/COVID-Net) including more modularity for new data and the option to write datasets as tfrecords.
